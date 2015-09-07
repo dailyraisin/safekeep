@@ -3,6 +3,7 @@
 var fs = require('fs');
 var path = require('path');
 var mkdirp = require('mkdirp');
+var mv = require('mv');
 var Rsync = require('rsync');
 
 var source = process.argv[2];
@@ -12,8 +13,8 @@ var dest = process.argv[3];
 function Inkwell (source, dest) {
     this.source = source;
     this.dest = dest;
-    var ignore = "";
-    var self = this;
+    //var ignore = "";
+    //var self = this;
 }
 
 Inkwell.prototype.initialize = function() { // verify that there are two arguments, source and destination, and that source is a directory
@@ -62,7 +63,7 @@ Inkwell.prototype.finalVariables = function() {
 };
 
 
-Inkwell.prototype.finalChecklist = function() { // check if destination is a directory already, if not create it. check if it's writable. check if IGNORE exists
+Inkwell.prototype.finalChecklist = function() { //ensure destination folders exist, ignore exists
     var self = this;
     mkdirp(this.dest, function (err) {
         if (err) {
@@ -71,7 +72,20 @@ Inkwell.prototype.finalChecklist = function() { // check if destination is a dir
         }
         else console.log("Created " + self.dest);
     });
-
+    mkdirp(this.complete, function (err) {
+        if (err) {
+            console.log("Unable to create " + self.complete);
+            process.exit(1);
+        }
+        else console.log("Created " + self.complete);
+    });
+    mkdirp(this.current, function (err) {
+        if (err) {
+            console.log("Unable to create " + self.current);
+            process.exit(1);
+        }
+        else console.log("Created " + self.current);
+    });
     fs.access(this.dest, fs.W_OK, function(err) {
         if (err) {
             console.log(self.dest + " is not writable");
@@ -89,6 +103,7 @@ Inkwell.prototype.finalChecklist = function() { // check if destination is a dir
 
 
 Inkwell.prototype.rSync = function() {
+    var self = this;
     var rsync = new Rsync()
     .flags('az')
 	  .set('delete')
@@ -98,11 +113,36 @@ Inkwell.prototype.rSync = function() {
 	  .source(this.source)
 	  .destination(this.incomplete);
 
-    console.log(rsync.command()); //prints rsync command as if in bash
-    rsync.execute(function(error, code, cmd){});
+    //console.log(rsync.command()); //prints rsync command as if in bash
+    rsync.execute(function(error, code, cmd){
+        if (code === 0) { //exit code 0 means rsync was successful
+            self.moveToComplete();
+        }
+        else {
+            console.log("rsync was unsuccessful " + cmd);
+            process.exit(1);
+        }
+    });
+    
+    
 };
 
+Inkwell.prototype.moveToComplete = function() {
+    console.log("Now's the time to move incomplete to complete.");
+    mv(this.incomplete, this.complete, function(err) {});
+    this.clearOldLink();
+};
 
+Inkwell.prototype.clearOldLink = function() {
+    console.log("Now's the time to clear /current");
+    fs.unlink(this.current, function(){}); //maybe put makeNewLink as callback
+    this.makeNewLink();
+};
+
+Inkwell.prototype.makeNewLink = function() {
+    console.log("Now's the time to link /current");
+    fs.symlink(this.current, path.basename(this.complete) + "/", function(){}); //not sure about order here
+};
 
 Date.prototype.yyyymmddHHMMSS = function(){
     var yyyy = this.getFullYear().toString();
