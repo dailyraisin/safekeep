@@ -12,10 +12,9 @@ var dest = process.argv[3];
 function Inkwell (source, dest) {
     this.source = source;
     this.dest = dest;
-    var ignore;
 }
 
-Inkwell.prototype.checkArgs = function() { // verify that there are two arguments, source and destination, and that source is a directory
+Inkwell.prototype.initialize = function() { // verify that there are two arguments, source and destination, and that source is a directory
     if (this.source === undefined) {
         console.log("Usage: inkwell source destination");
         process.exit(1);
@@ -106,14 +105,17 @@ Inkwell.prototype.rSync = function() {
 
 
 Date.prototype.yyyymmddHHMMSS = function(){
-  var yyyy = this.getFullYear().toString();
-  var mm = (this.getMonth()+1).toString(); // getMonth() is zero-based
-  var dd = this.getDate().toString();
-  var HH = this.getHours().toString();
-  var MM = this.getMinutes().toString();
-  var SS = this.getSeconds().toString();
-  return yyyy + "-"+ (mm[1]?mm:"0"+mm[0]) + "-" + (dd[1]?dd:"0"+dd[0]) + "." + HH + "-" + MM + "-" + SS; // padding
+    var yyyy = this.getFullYear().toString();
+    var mm = (this.getMonth()+1).toString(); // getMonth() is zero-based
+    var dd = this.getDate().toString();
+    var HH = this.getHours().toString();
+    var MM = this.getMinutes().toString();
+    var SS = this.getSeconds().toString();
+    return yyyy + "-"+ (mm[1]?mm:"0"+mm[0]) + "-" + (dd[1]?dd:"0"+dd[0]) + "." + HH + "-" + MM + "-" + SS; // padding
 };
 
-var backup = new Inkwell(source, dest);
-backup.checkArgs();
+
+
+
+var inkwell = new Inkwell(source, dest);
+inkwell.initialize();
