@@ -12,9 +12,12 @@ var dest = process.argv[3];
 function Inkwell (source, dest) {
     this.source = source;
     this.dest = dest;
+    var ignore = "";
+    var self = this;
 }
 
 Inkwell.prototype.initialize = function() { // verify that there are two arguments, source and destination, and that source is a directory
+    var self = this;
     if (this.source === undefined) {
         console.log("Usage: inkwell source destination");
         process.exit(1);
@@ -26,23 +29,23 @@ Inkwell.prototype.initialize = function() { // verify that there are two argumen
     }
 
     if (fs.lstatSync(this.source).isDirectory() === false) {
-        console.log(this.source + " is not a directory. I can only back up directories.");
+        console.log(self.source + " is not a directory. I can only back up directories.");
         process.exit(1);
     }
     this.formatArgs();
 };
 
 Inkwell.prototype.formatArgs = function() { // make sure source and dest are full paths, remove trailing slashes, avoid double nesting, add basename of source to destination
-
+    var self = this;
     this.source = path.resolve(this.source); // return absolute path and remove possible trailing slash
     this.dest = path.resolve(this.dest);
 
     if (path.basename(this.dest) == path.basename(this.source )) {
-        this.dest = path.dirname(this.dest);
+        self.dest = path.dirname(self.dest);
     }
 
-    this.dest = this.dest + "/" + path.basename(this.source);
-    console.log (this.dest);
+    dest = dest + "/" + path.basename(this.source);
+    //console.log ("this should be absolute path:" + self.dest + self.source);
 
     this.finalVariables();
 };
@@ -55,32 +58,29 @@ Inkwell.prototype.finalVariables = function() {
     this.complete = this.dest + "/back-" + this.date;
     this.current = this.dest + "/current";
     this.linkDest = this.current;
-    console.log(this.linkDest);
-    console.log(this.date);
     this.finalChecklist();
 };
 
 
 Inkwell.prototype.finalChecklist = function() { // check if destination is a directory already, if not create it. check if it's writable. check if IGNORE exists
-    
+    var self = this;
     mkdirp(this.dest, function (err) {
         if (err) {
-            console.log("Unable to create destination directory");
+            console.log("Unable to create " + self.dest);
             process.exit(1);
         }
-        else console.log("Created " + this.dest);
+        else console.log("Created " + self.dest);
     });
 
     fs.access(this.dest, fs.W_OK, function(err) {
         if (err) {
-            console.log(this.dest + " is not writable");
+            console.log(self.dest + " is not writable");
             process.exit(1);
         }
     });
-
     fs.access(this.ignore, fs.R_OK, function(err) { // if IGNORE file doesn't exist, exit
         if (err) {
-            console.log(this.ignore + " does not exist");
+            console.log(self.ignore + " does not exist");
             process.exit(1);
         }
     });
@@ -99,7 +99,7 @@ Inkwell.prototype.rSync = function() {
 	  .destination(this.incomplete);
 
     console.log(rsync.command()); //prints rsync command as if in bash
-    //rsync.execute(function(error, code, cmd){});
+    rsync.execute(function(error, code, cmd){});
 };
 
 
