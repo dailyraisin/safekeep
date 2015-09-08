@@ -45,8 +45,8 @@ Inkwell.prototype.formatArgs = function() { // make sure source and dest are ful
         self.dest = path.dirname(self.dest);
     }
 
-    dest = dest + "/" + path.basename(this.source);
-    //console.log ("this should be absolute path:" + self.dest + self.source);
+    self.dest = self.dest + "/" + path.basename(this.source);
+    console.log ("this should be absolute path:" + self.dest + "  " + self.source);
 
     this.finalVariables();
 };
@@ -92,7 +92,7 @@ Inkwell.prototype.finalChecklist = function() { //ensure destination folders exi
             process.exit(1);
         }
     });
-    fs.access(this.ignore, fs.R_OK, function(err) { // if IGNORE file doesn't exist, exit
+    fs.access(this.ignore, fs.R_OK, function(err) { // if .backupignore doesn't exist, exit
         if (err) {
             console.log(self.ignore + " does not exist");
             process.exit(1);
@@ -108,10 +108,10 @@ Inkwell.prototype.rSync = function() {
     .flags('az')
 	  .set('delete')
 	  .set('delete-excluded')
-	  .set('exclude-from', this.ignore)
-	  .set('link-dest', this.linkDest)
-	  .source(this.source)
-	  .destination(this.incomplete);
+	  .set('exclude-from', self.ignore)
+	  .set('link-dest', self.linkDest)
+	  .source(self.source)
+	  .destination(self.incomplete);
 
     //console.log(rsync.command()); //prints rsync command as if in bash
     rsync.execute(function(error, code, cmd){
@@ -128,20 +128,23 @@ Inkwell.prototype.rSync = function() {
 };
 
 Inkwell.prototype.moveToComplete = function() {
+    var self = this;
     console.log("Now's the time to move incomplete to complete.");
-    mv(this.incomplete, this.complete, function(err) {});
+    mv(self.incomplete, self.complete, function(err) {});
     this.clearOldLink();
 };
 
 Inkwell.prototype.clearOldLink = function() {
+    var self = this;
     console.log("Now's the time to clear /current");
-    fs.unlink(this.current, function(){}); //maybe put makeNewLink as callback
+    fs.unlink(self.current, function(){}); //maybe put makeNewLink as callback
     this.makeNewLink();
 };
 
 Inkwell.prototype.makeNewLink = function() {
+    var self = this;
     console.log("Now's the time to link /current");
-    fs.symlink(this.current, path.basename(this.complete) + "/", function(){}); //not sure about order here
+    fs.symlink(path.basename(self.complete) + "/", self.current, function(){}); //not sure about order here
 };
 
 Date.prototype.yyyymmddHHMMSS = function(){
