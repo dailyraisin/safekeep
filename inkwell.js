@@ -79,13 +79,13 @@ Inkwell.prototype.finalChecklist = function() { //ensure destination folders exi
         }
         else console.log("Created " + self.complete);
     });
-    mkdirp(this.current, function (err) {
+    /*mkdirp(this.current, function (err) {
         if (err) {
             console.log("Unable to create " + self.current);
             process.exit(1);
         }
         else console.log("Created " + self.current);
-    });
+    });*/
     fs.access(this.dest, fs.W_OK, function(err) {
         if (err) {
             console.log(self.dest + " is not writable");
