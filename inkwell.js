@@ -5,6 +5,7 @@ var path = require('path');
 var mkdirp = require('mkdirp');
 var mv = require('mv');
 var Rsync = require('rsync');
+var moment = require('moment');
 
 var source = process.argv[2];
 var dest = process.argv[3];
@@ -13,8 +14,6 @@ var dest = process.argv[3];
 function Inkwell (source, dest) {
     this.source = source;
     this.dest = dest;
-    //var ignore = "";
-    //var self = this;
 }
 
 Inkwell.prototype.initialize = function() { // verify that there are two arguments, source and destination, and that source is a directory
@@ -36,25 +35,25 @@ Inkwell.prototype.initialize = function() { // verify that there are two argumen
     this.formatArgs();
 };
 
-Inkwell.prototype.formatArgs = function() { // make sure source and dest are full paths, remove trailing slashes, avoid double nesting, add basename of source to destination
+Inkwell.prototype.formatArgs = function() {
     var self = this;
-    this.source = path.resolve(this.source); // return absolute path and remove possible trailing slash
+    this.source = path.resolve(this.source); //return absolute path and remove possible trailing slash
     this.dest = path.resolve(this.dest);
 
-    if (path.basename(this.dest) == path.basename(this.source )) {
+    if (path.basename(this.dest) == path.basename(this.source )) { //avoid double nesting
         self.dest = path.dirname(self.dest);
     }
 
-    self.dest = self.dest + "/" + path.basename(this.source);
-    console.log ("this should be absolute path:" + self.dest + "  " + self.source);
+    self.dest = self.dest + "/" + path.basename(this.source); //add basename of source to destination
+    //console.log ("this should be absolute path:" + self.dest + "  " + self.source);
 
     this.finalVariables();
 };
 
 
 Inkwell.prototype.finalVariables = function() {
-    this.ignore = this.source + "/.backupignore";
-    this.date = new Date().yyyymmddHHMMSS();
+    this.ignore = this.source + "/.inkwellignore";
+    this.date = moment().format('YYYY-MM-DD.hh-mm-ss');
     this.incomplete = this.dest + "/incomplete-back-" + this.date;
     this.complete = this.dest + "/back-" + this.date;
     this.current = this.dest + "/current";
@@ -63,16 +62,24 @@ Inkwell.prototype.finalVariables = function() {
 };
 
 
-Inkwell.prototype.finalChecklist = function() { //ensure destination folders exist, ignore exists
+Inkwell.prototype.finalChecklist = function() {
     var self = this;
-    mkdirp(this.dest, function (err) {
+    mkdirp(this.dest, function (err) {//if destination doesn't exist, make directory
         if (err) {
             console.log("Unable to create " + self.dest);
             process.exit(1);
         }
-        else console.log("Created " + self.dest);
+        else {//AFTER destination is created (if it didn't exist already), then make sure destination is writeable
+            //console.log("Created " + self.dest);
+            fs.access(self.dest, fs.W_OK, function(err) {
+                if (err) {
+                console.log(self.dest + " is not writable");
+                process.exit(1);
+                }
+            });
+        }
     });
-    mkdirp(this.complete, function (err) {
+    mkdirp(this.complete, function (err) {//create "completed backup" directory
         if (err) {
             console.log("Unable to create " + self.complete);
             process.exit(1);
@@ -86,13 +93,7 @@ Inkwell.prototype.finalChecklist = function() { //ensure destination folders exi
         }
         else console.log("Created " + self.current);
     });*/
-    fs.access(this.dest, fs.W_OK, function(err) {
-        if (err) {
-            console.log(self.dest + " is not writable");
-            process.exit(1);
-        }
-    });
-    fs.access(this.ignore, fs.R_OK, function(err) { // if .backupignore doesn't exist, exit
+    fs.access(this.ignore, fs.R_OK, function(err) { //make sure there's a .inkwellignore in the source directory
         if (err) {
             console.log(self.ignore + " does not exist");
             process.exit(1);
@@ -129,36 +130,23 @@ Inkwell.prototype.rSync = function() {
 
 Inkwell.prototype.moveToComplete = function() {
     var self = this;
-    console.log("Now's the time to move incomplete to complete.");
+    //console.log("Now's the time to move incomplete to complete.");
     mv(self.incomplete, self.complete, function(err) {});
     this.clearOldLink();
 };
 
 Inkwell.prototype.clearOldLink = function() {
     var self = this;
-    console.log("Now's the time to clear /current");
+    //console.log("Now's the time to clear /current");
     fs.unlink(self.current, function(){}); //maybe put makeNewLink as callback
     this.makeNewLink();
 };
 
 Inkwell.prototype.makeNewLink = function() {
     var self = this;
-    console.log("Now's the time to link /current");
-    fs.symlink(path.basename(self.complete) + "/", self.current, function(){}); //not sure about order here
+    //console.log("Now's the time to link /current");
+    fs.symlink(path.basename(self.complete) + "/", self.current, function(){});
 };
-
-Date.prototype.yyyymmddHHMMSS = function(){
-    var yyyy = this.getFullYear().toString();
-    var mm = (this.getMonth()+1).toString(); // getMonth() is zero-based
-    var dd = this.getDate().toString();
-    var HH = this.getHours().toString();
-    var MM = this.getMinutes().toString();
-    var SS = this.getSeconds().toString();
-    return yyyy + "-"+ (mm[1]?mm:"0"+mm[0]) + "-" + (dd[1]?dd:"0"+dd[0]) + "." + HH + "-" + MM + "-" + SS; // padding
-};
-
-
-
 
 var inkwell = new Inkwell(source, dest);
 inkwell.initialize();
