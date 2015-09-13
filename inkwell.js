@@ -6,6 +6,7 @@ var mkdirp = require('mkdirp');
 var mv = require('mv');
 var Rsync = require('rsync');
 var moment = require('moment');
+var chalk = require('chalk');
 
 var source = process.argv[2];
 var dest = process.argv[3];
@@ -22,12 +23,10 @@ Inkwell.prototype.initialize = function() { // verify that there are two argumen
         console.log("Usage: inkwell source destination");
         process.exit(1);
     }
-
     else if (this.dest === undefined) {
         console.log("Usage: inkwell source destination");
         process.exit(1);
     }
-
     if (fs.lstatSync(this.source).isDirectory() === false) {
         console.log(self.source + " is not a directory. I can only back up directories.");
         process.exit(1);
@@ -39,14 +38,10 @@ Inkwell.prototype.formatArgs = function() {
     var self = this;
     this.source = path.resolve(this.source); //return absolute path and remove possible trailing slash
     this.dest = path.resolve(this.dest);
-
     if (path.basename(this.dest) == path.basename(this.source )) { //avoid double nesting
         self.dest = path.dirname(self.dest);
     }
-
     self.dest = self.dest + "/" + path.basename(this.source); //add basename of source to destination
-    //console.log ("this should be absolute path:" + self.dest + "  " + self.source);
-
     this.finalVariables();
 };
 
@@ -70,7 +65,6 @@ Inkwell.prototype.finalChecklist = function() {
             process.exit(1);
         }
         else {//AFTER destination is created (if it didn't exist already), then make sure destination is writeable
-            //console.log("Created " + self.dest);
             fs.access(self.dest, fs.W_OK, function(err) {
                 if (err) {
                 console.log(self.dest + " is not writable");
@@ -79,23 +73,16 @@ Inkwell.prototype.finalChecklist = function() {
             });
         }
     });
-    mkdirp(this.complete, function (err) {//create "completed backup" directory
+    mkdirp(this.complete, function (err) {//create "completed" directory
         if (err) {
             console.log("Unable to create " + self.complete);
             process.exit(1);
         }
-        else console.log("Created " + self.complete);
+        else console.log(chalk.cyan("Created " + self.complete));
     });
-    /*mkdirp(this.current, function (err) {
-        if (err) {
-            console.log("Unable to create " + self.current);
-            process.exit(1);
-        }
-        else console.log("Created " + self.current);
-    });*/
     fs.access(this.ignore, fs.R_OK, function(err) { //make sure there's a .inkwellignore in the source directory
         if (err) {
-            console.log(self.ignore + " does not exist");
+            console.log(chalk.bgYellow(self.ignore + " does not exist"));
             process.exit(1);
         }
     });
@@ -114,7 +101,6 @@ Inkwell.prototype.rSync = function() {
 	  .source(self.source)
 	  .destination(self.incomplete);
 
-    //console.log(rsync.command()); //prints rsync command as if in bash
     rsync.execute(function(error, code, cmd){
         if (code === 0) { //exit code 0 means rsync was successful
             self.moveToComplete();
@@ -124,8 +110,6 @@ Inkwell.prototype.rSync = function() {
             process.exit(1);
         }
     });
-    
-    
 };
 
 Inkwell.prototype.moveToComplete = function() {
