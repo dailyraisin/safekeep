@@ -106,7 +106,7 @@ Inkwell.prototype.rSync = function() {
             self.moveToComplete();
         }
         else {
-            console.log("rsync was unsuccessful " + cmd);
+            console.log(chalk.red("rsync was unsuccessful " + cmd));
             process.exit(1);
         }
     });
