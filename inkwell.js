@@ -59,6 +59,12 @@ Inkwell.prototype.finalVariables = function() {
 
 Inkwell.prototype.finalChecklist = function() {
     var self = this;
+    fs.access(this.ignore, fs.R_OK, function(err) { //make sure there's a .inkwellignore in the source directory
+        if (err) {
+            console.log(chalk.bgYellow(self.ignore + " does not exist"));
+            process.exit(1);
+        }
+    });
     mkdirp(this.dest, function (err) {//if destination doesn't exist, make directory
         if (err) {
             console.log("Unable to create " + self.dest);
@@ -79,12 +85,6 @@ Inkwell.prototype.finalChecklist = function() {
             process.exit(1);
         }
         else console.log(chalk.cyan("Created " + self.complete));
-    });
-    fs.access(this.ignore, fs.R_OK, function(err) { //make sure there's a .inkwellignore in the source directory
-        if (err) {
-            console.log(chalk.bgYellow(self.ignore + " does not exist"));
-            process.exit(1);
-        }
     });
     this.rSync();
 };
