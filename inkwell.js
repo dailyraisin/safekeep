@@ -42,9 +42,23 @@ Inkwell.prototype.formatArgs = function() {
         self.dest = path.dirname(self.dest);
     }
     self.dest = self.dest + "/" + path.basename(this.source); //add basename of source to destination
-    this.finalVariables();
+    this.replaceLinkIfMissing();
 };
 
+Inkwell.prototype.replaceLinkIfMissing = function() {
+    this.backups = [];
+    var self = this;
+    function filterBack(thisFile) {
+        return thisFile.substr(0,5) == "back-"; // === or == ?
+    }
+    fs.readdir(this.dest, function(err, files){//read this.dest directory and pass the array "files"
+        //console.log(files[1].substr(0,5) == "back-");
+        console.log(files.filter(filterBack));
+    });
+    //console.log(this.backups);
+    //fs.symlink(this.latest + "/", this.current, function(){});
+    //this.finalVariables();
+};
 
 Inkwell.prototype.finalVariables = function() {
     this.ignore = this.source + "/.inkwellignore";
@@ -129,7 +143,7 @@ Inkwell.prototype.clearOldLink = function() {
 Inkwell.prototype.makeNewLink = function() {
     var self = this;
     //console.log("Now's the time to link /current");
-    fs.symlink(path.basename(self.complete) + "/", self.current, function(){});
+    fs.symlink(path.basename(self.complete) + "/", self.current, function(){}); //fs.symlink(target, linkname, callback)
 };
 
 var inkwell = new Inkwell(source, dest);
