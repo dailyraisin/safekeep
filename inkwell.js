@@ -48,16 +48,18 @@ Inkwell.prototype.formatArgs = function() {
 Inkwell.prototype.replaceLinkIfMissing = function() {
     var self = this;
     function filterBack(thisFile, index, array) {//callback for array.filter(callback), gets (element, index, array)
-        return thisFile.substr(0,5) == "back-"; // === or == ?
+        return thisFile.substr(0,5) == "back-"; // === vs. == ?
     }
     function saveFilteredList(files) {//did I just use a closure?
         var backups = files.filter(filterBack);
+        backups.sort();
+        backups.reverse();
         console.log(backups);
     }
     fs.readdir(this.dest, function(err, files){//read this.dest directory and pass the array "files"
         saveFilteredList(files);
     });
-    console.log(this.backups);
+    //console.log(this.backups);
     //fs.symlink(this.latest + "/", this.current, function(){});
     //this.finalVariables();
 };
