@@ -60,7 +60,7 @@ Inkwell.prototype.replaceLinkIfMissing = function() {
     fs.readdir(this.dest, function(err, files){//read this.dest directory and pass the array "files"
         self.linkLatestBackup(files);
     });
-    //this.finalChecklist();
+    this.finalChecklist();
 };
 
 Inkwell.prototype.linkLatestBackup = function(files) {//did I just use a closure?
