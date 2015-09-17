@@ -47,21 +47,21 @@ Inkwell.prototype.formatArgs = function() {
 
 Inkwell.prototype.replaceLinkIfMissing = function() {
     var self = this;
+    fs.readdir(this.dest, function(err, files){//read this.dest directory and pass the array "files"
+        self.linkLatestBackup(files);
+    });
+    //fs.symlink(this.latest + "/", this.current, function(){});
+    //this.finalVariables();
+};
+Inkwell.prototype.linkLatestBackup = function(files) {//did I just use a closure?
     function filterBack(thisFile, index, array) {//callback for array.filter(callback), gets (element, index, array)
         return thisFile.substr(0,5) == "back-"; // === vs. == ?
     }
-    function saveFilteredList(files) {//did I just use a closure?
-        var backups = files.filter(filterBack);
-        backups.sort();
-        backups.reverse();
-        console.log(backups);
-    }
-    fs.readdir(this.dest, function(err, files){//read this.dest directory and pass the array "files"
-        saveFilteredList(files);
-    });
-    //console.log(this.backups);
-    //fs.symlink(this.latest + "/", this.current, function(){});
-    //this.finalVariables();
+    this.backups = files.filter(filterBack);
+    this.latestBackup = this.backups.sort().reverse()[0];
+    console.log(this.latestBackup);
+    //fs.symlink(this.latestBackup + "/", this.current, function(){});
+    
 };
 
 Inkwell.prototype.finalVariables = function() {
