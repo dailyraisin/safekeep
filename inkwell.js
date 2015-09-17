@@ -42,26 +42,7 @@ Inkwell.prototype.formatArgs = function() {
         self.dest = path.dirname(self.dest);
     }
     self.dest = self.dest + "/" + path.basename(this.source); //add basename of source to destination
-    this.replaceLinkIfMissing();
-};
-
-Inkwell.prototype.replaceLinkIfMissing = function() {
-    var self = this;
-    fs.readdir(this.dest, function(err, files){//read this.dest directory and pass the array "files"
-        self.linkLatestBackup(files);
-    });
-    //fs.symlink(this.latest + "/", this.current, function(){});
-    //this.finalVariables();
-};
-Inkwell.prototype.linkLatestBackup = function(files) {//did I just use a closure?
-    function filterBack(thisFile, index, array) {//callback for array.filter(callback), gets (element, index, array)
-        return thisFile.substr(0,5) == "back-"; // === vs. == ?
-    }
-    this.backups = files.filter(filterBack);
-    this.latestBackup = this.backups.sort().reverse()[0];
-    console.log(this.latestBackup);
-    //fs.symlink(this.latestBackup + "/", this.current, function(){});
-    
+    this.finalVariables();
 };
 
 Inkwell.prototype.finalVariables = function() {
@@ -71,9 +52,26 @@ Inkwell.prototype.finalVariables = function() {
     this.complete = this.dest + "/back-" + this.date;
     this.current = this.dest + "/current";
     this.linkDest = this.current;
-    this.finalChecklist();
+    this.replaceLinkIfMissing();
 };
 
+Inkwell.prototype.replaceLinkIfMissing = function() {
+    var self = this;
+    fs.readdir(this.dest, function(err, files){//read this.dest directory and pass the array "files"
+        self.linkLatestBackup(files);
+    });
+    //this.finalChecklist();
+};
+
+Inkwell.prototype.linkLatestBackup = function(files) {//did I just use a closure?
+    function filterBack(thisFile, index, array) {//callback for array.filter(callback), gets (element, index, array)
+        return thisFile.substr(0,5) == "back-"; // === vs. == ?
+    }
+    this.backups = files.filter(filterBack);
+    this.latestBackup = this.backups.sort().reverse()[0];
+    fs.symlink(this.latestBackup + "/", this.current, function(){});
+    
+};
 
 Inkwell.prototype.finalChecklist = function() {
     var self = this;
