@@ -64,13 +64,12 @@ Inkwell.prototype.replaceLinkIfMissing = function() {
 };
 
 Inkwell.prototype.linkLatestBackup = function(files) {//did I just use a closure?
-    function filterBack(thisFile, index, array) {//callback for array.filter(callback), gets (element, index, array)
-        return thisFile.substr(0,5) == "back-"; // === vs. == ?
-    }
-    this.backups = files.filter(filterBack);
+    this.backups = files.filter(this.filterBack);
     this.latestBackup = this.backups.sort().reverse()[0];
     fs.symlink(this.latestBackup + "/", this.current, function(){});
-    
+};
+Inkwell.prototype.filterBack = function(thisFile, index, array) {//callback for array.filter(callback), gets (element, index, array)
+        return thisFile.substr(0,5) == "back-"; // === vs. == ?
 };
 
 Inkwell.prototype.finalChecklist = function() {
