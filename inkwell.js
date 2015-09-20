@@ -60,16 +60,18 @@ Inkwell.prototype.replaceLinkIfMissing = function() {
     fs.readdir(this.dest, function(err, files){//read this.dest directory and pass the array "files"
         self.linkLatestBackup(files);
     });
-    this.finalChecklist();
 };
 
 Inkwell.prototype.linkLatestBackup = function(files) {//did I just use a closure?
+    var self = this;
     this.backups = files.filter(this.filterBack);
     this.latestBackup = this.backups.sort().reverse()[0];
-    fs.symlink(this.latestBackup + "/", this.current, function(){});
+    fs.symlink(this.latestBackup + "/", this.current, function(){
+        self.finalChecklist();
+    });
 };
 Inkwell.prototype.filterBack = function(thisFile, index, array) {//callback for array.filter(callback), gets (element, index, array)
-        return thisFile.substr(0,5) == "back-"; // === vs. == ?
+        return thisFile.substr(0,5) == "back-";
 };
 
 Inkwell.prototype.finalChecklist = function() {
