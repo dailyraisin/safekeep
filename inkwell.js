@@ -45,7 +45,6 @@ Inkwell.prototype.formatArgs = function() {
     this.finalVariables();
 };
 
-
 Inkwell.prototype.finalVariables = function() {
     this.ignore = this.source + "/.inkwellignore";
     this.date = moment().format('YYYY-MM-DD.hh-mm-ss');
@@ -53,9 +52,27 @@ Inkwell.prototype.finalVariables = function() {
     this.complete = this.dest + "/back-" + this.date;
     this.current = this.dest + "/current";
     this.linkDest = this.current;
-    this.finalChecklist();
+    this.replaceLinkIfMissing();
 };
 
+Inkwell.prototype.replaceLinkIfMissing = function() {
+    var self = this;
+    fs.readdir(this.dest, function(err, files){//read this.dest directory and pass the array "files"
+        self.linkLatestBackup(files);
+    });
+};
+
+Inkwell.prototype.linkLatestBackup = function(files) {//did I just use a closure?
+    var self = this;
+    this.backups = files.filter(this.filterBack);
+    this.latestBackup = this.backups.sort().reverse()[0];
+    fs.symlink(this.latestBackup + "/", this.current, function(){
+        self.finalChecklist();
+    });
+};
+Inkwell.prototype.filterBack = function(thisFile, index, array) {//callback for array.filter(callback), gets (element, index, array)
+        return thisFile.substr(0,5) == "back-";
+};
 
 Inkwell.prototype.finalChecklist = function() {
     var self = this;
@@ -129,7 +146,7 @@ Inkwell.prototype.clearOldLink = function() {
 Inkwell.prototype.makeNewLink = function() {
     var self = this;
     //console.log("Now's the time to link /current");
-    fs.symlink(path.basename(self.complete) + "/", self.current, function(){});
+    fs.symlink(path.basename(self.complete) + "/", self.current, function(){}); //fs.symlink(target, linkname, callback)
 };
 
 var inkwell = new Inkwell(source, dest);
