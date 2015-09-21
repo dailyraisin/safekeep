@@ -52,7 +52,43 @@ Inkwell.prototype.finalVariables = function() {
     this.complete = this.dest + "/back-" + this.date;
     this.current = this.dest + "/current";
     this.linkDest = this.current;
-    this.replaceLinkIfMissing();
+    this.verifyInkwellignore();
+};
+
+Inkwell.prototype.verifyInkwellignore = function() {//look for .inkwellignore
+    var self = this;
+    fs.access(self.ignore, fs.R_OK, ifIgnoreNotFound);//ifIgnoreNotFound is callback
+    function ifIgnoreNotFound(err) {
+        if (err && path.dirname(self.ignore) === "/") {
+            console.log(chalk.bgYellow(self.ignore + " does not exist in this or any parent directories"));
+            process.exit(1);
+        }
+        else if (err) {
+            self.ignore = path.normalize(path.dirname(self.ignore) + "/../.inkwellignore");
+            fs.access(self.ignore, fs.R_OK, ifIgnoreNotFound);
+            console.log("lookingForIgnore again!");
+        }
+        else self.makeDestDir();
+    }
+};
+
+Inkwell.prototype.makeDestDir = function() {
+    var self = this;
+    mkdirp(this.dest, function (err) {//if destination doesn't exist, make directory
+        if (err) {
+            console.log("Unable to create " + self.dest);
+            process.exit(1);
+        }
+        else {//AFTER destination is created (if it didn't exist already), then make sure destination is writeable
+            fs.access(self.dest, fs.W_OK, function(err) {
+                if (err) {
+                console.log(self.dest + " is not writable");
+                process.exit(1);
+                }
+            });
+            self.replaceLinkIfMissing();
+        }
+    });
 };
 
 Inkwell.prototype.replaceLinkIfMissing = function() {
@@ -67,45 +103,26 @@ Inkwell.prototype.linkLatestBackup = function(files) {//did I just use a closure
     this.backups = files.filter(this.filterBack);
     this.latestBackup = this.backups.sort().reverse()[0];
     fs.symlink(this.latestBackup + "/", this.current, function(){
-        self.finalChecklist();
+        self.makeBackupDir();
     });
 };
+
 Inkwell.prototype.filterBack = function(thisFile, index, array) {//callback for array.filter(callback), gets (element, index, array)
         return thisFile.substr(0,5) == "back-";
 };
 
-Inkwell.prototype.finalChecklist = function() {
+Inkwell.prototype.makeBackupDir = function() {
     var self = this;
-    fs.access(this.ignore, fs.R_OK, function(err) { //make sure there's a .inkwellignore in the source directory
-        if (err) {
-            console.log(chalk.bgYellow(self.ignore + " does not exist"));
-            process.exit(1);
-        }
-    });
-    mkdirp(this.dest, function (err) {//if destination doesn't exist, make directory
-        if (err) {
-            console.log("Unable to create " + self.dest);
-            process.exit(1);
-        }
-        else {//AFTER destination is created (if it didn't exist already), then make sure destination is writeable
-            fs.access(self.dest, fs.W_OK, function(err) {
-                if (err) {
-                console.log(self.dest + " is not writable");
-                process.exit(1);
-                }
-            });
-        }
-    });
     mkdirp(this.complete, function (err) {//create "completed" directory
         if (err) {
             console.log("Unable to create " + self.complete);
             process.exit(1);
         }
         else console.log(chalk.cyan("Created " + self.complete));
+        self.rSync();
     });
-    this.rSync();
+    
 };
-
 
 Inkwell.prototype.rSync = function() {
     var self = this;
