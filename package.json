@@ -1,0 +1,21 @@
+{
+  "name": "inkwell",
+  "version": "0.1.0",
+  "description": "Incremental backups",
+  "main": "inkwell.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@bitbucket.org:tysoeh/inkwell.git"
+  },
+  "author": "",
+  "license": "none",
+  "dependencies": {
+    "chalk": "^1.1.1",
+    "mkdirp": "^0.5.1",
+    "mv": "^2.1.1",
+    "rsync": "^0.4.0"
+  }
+}
