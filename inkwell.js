@@ -28,6 +28,7 @@ async.series([
     replaceLinkIfMissing,
     linkLatestBackup,
     makeBackupDir,
+    rSync,
     debug
 ], handleError);
 
@@ -157,6 +158,28 @@ function makeBackupDir (next) {
     });
 }
 
+function rSync (next) {
+    console.log(chalk.blue('step 10'));
+    var rsync = new Rsync()
+    .flags('az')
+	  .set('delete')
+	  .set('delete-excluded')
+	  .set('exclude-from', ignore)
+	  .set('link-dest', linkDest)
+	  .source(source)
+	  .destination(incomplete);
+
+    rsync.execute(function(error, code, cmd){
+        if (code === 0) { //exit code 0 means rsync was successful
+            next(null);
+        }
+        else {
+            console.log(chalk.red('rsync was unsuccessful ' + cmd));
+            process.exit(1);
+        }
+    });
+}
+
 function debug (next) {
     formatDebug('source', source);
     formatDebug('dest', dest);
@@ -181,43 +204,6 @@ function formatDebug (label, value) {
 
 
 
-
-//Inkwell.prototype.makeBackupDir = function() {
-//    var self = this;
-//    mkdirp(this.complete, function (err) {//create 'completed' directory
-//        if (err) {
-//            console.log('Unable to create ' + self.complete);
-//            process.exit(1);
-//        }
-//        else {
-//            console.log(chalk.cyan('Created ' + self.complete));
-//        }
-//        self.rSync();
-//    });
-//
-//};
-//
-//Inkwell.prototype.rSync = function() {
-//    var self = this;
-//    var rsync = new Rsync()
-//    .flags('az')
-//	  .set('delete')
-//	  .set('delete-excluded')
-//	  .set('exclude-from', self.ignore)
-//	  .set('link-dest', self.linkDest)
-//	  .source(self.source)
-//	  .destination(self.incomplete);
-//
-//    rsync.execute(function(error, code, cmd){
-//        if (code === 0) { //exit code 0 means rsync was successful
-//            self.moveToComplete();
-//        }
-//        else {
-//            console.log(chalk.red('rsync was unsuccessful ' + cmd));
-//            process.exit(1);
-//        }
-//    });
-//};
 //
 //Inkwell.prototype.moveToComplete = function() {
 //    var self = this;
