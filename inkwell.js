@@ -27,6 +27,7 @@ async.series([
     makeDestDir,
     replaceLinkIfMissing,
     linkLatestBackup,
+    makeBackupDir,
     debug
 ], handleError);
 
@@ -121,6 +122,7 @@ function makeDestDir (next) {
 }
 
 function replaceLinkIfMissing (next) {
+    console.log(chalk.blue('step 7'));
     fs.readdir(dest, function(err, files){//read dest directory and pass the array "files"
         destContents = files;
         next(null);
@@ -128,6 +130,7 @@ function replaceLinkIfMissing (next) {
 }
 
 function linkLatestBackup (next) {//did I just use a closure?
+    console.log(chalk.blue('step 8'));
     var files = destContents;
     var backups = files.filter(filterBack);
     var latestBackup = backups.sort().reverse()[0];
@@ -138,6 +141,20 @@ function linkLatestBackup (next) {//did I just use a closure?
 
 function filterBack (thisFile) {//callback for array.filter(callback), gets (element, index, array)
     return thisFile.substr(0,5) === 'back-';
+}
+
+function makeBackupDir (next) {
+    console.log(chalk.blue('step 9'));
+    mkdirp(complete, function (err) {//create 'completed' directory
+        if (err) {
+            console.log('Unable to create ' + complete);
+            process.exit(1);
+        }
+        else {
+            console.log(chalk.cyan('Created ' + complete));
+            next(null);
+        }
+    });
 }
 
 function debug (next) {
