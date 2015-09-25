@@ -23,6 +23,7 @@ async.series([
     formatArgs,
     finalVariables,
     verifyInkwellIgnore,
+    makeDestDir,
     debug
 ], handleError);
 
@@ -95,6 +96,25 @@ function verifyInkwellIgnore (next) {
             next(null);
         }
     }
+}
+
+function makeDestDir (next) {
+    console.log(chalk.blue('step 6'));
+    mkdirp(dest, function (err) {//if destination doesn't exist, make directory
+        if (err) {
+            console.log('Unable to create ' + dest);
+            process.exit(1);
+        }
+        else {//AFTER destination is created (if it didn't exist already), then make sure destination is writeable
+            fs.access(dest, fs.W_OK, function(err) {
+                if (err) {
+                    console.log(dest + ' is not writable');
+                    process.exit(1);
+                }
+                else next(null);
+            });
+        }
+    });
 }
 
 function debug (next) {
