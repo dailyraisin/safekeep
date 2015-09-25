@@ -33,30 +33,30 @@ function handleError (err) {
     }
 }
 
-function cliArgs (cb) {
+function cliArgs (next) {
     console.log(chalk.blue('step 1'));
 
     if (source === undefined || dest === undefined) {
-        cb('Usage: inkwell source destination');
+        next('Usage: inkwell source destination');
     }
     else {
-        cb(null);
+        next(null);
     }
 }
 
-function checkCurrentLinkExists (cb) {
+function checkCurrentLinkExists (next) {
     console.log(chalk.blue('step 2'));
     fs.lstat(source, function (err, stats) {
         if (err || !stats.isDirectory()) {
-            cb(source + ' is not a directory. I can only back up directories.');
+            next(source + ' is not a directory. I can only back up directories.');
         }
         else {
-            cb(null);
+            next(null);
         }
     });
 }
 
-function formatArgs (cb) {
+function formatArgs (next) {
     console.log(chalk.blue('step 3'));
     source = path.resolve(source); //return absolute path and remove possible trailing slash
     dest = path.resolve(dest);
@@ -64,10 +64,10 @@ function formatArgs (cb) {
         dest = path.dirname(dest);
     }
     dest = dest + '/' + path.basename(source); //add basename of source to destination
-    cb(null);
+    next(null);
 }
 
-function finalVariables (cb) {
+function finalVariables (next) {
     console.log(chalk.blue('step 4'));
 
     ignore = source + '/.inkwellignore';
@@ -75,10 +75,10 @@ function finalVariables (cb) {
     complete = dest + '/back-' + date;
     current = dest + '/current';
     linkDest = current;
-    cb(null);
+    next(null);
 }
 
-function verifyInkwellIgnore (cb) {
+function verifyInkwellIgnore (next) {
     console.log(chalk.blue('step 5'));
     fs.access(ignore, fs.R_OK, ifIgnoreNotFound);
     function ifIgnoreNotFound(err) {
@@ -92,12 +92,12 @@ function verifyInkwellIgnore (cb) {
             console.log('lookingForIgnore again!');
         }
         else {
-            cb(null);
+            next(null);
         }
     }
 }
 
-function debug (cb) {
+function debug (next) {
     formatDebug('source', source);
     formatDebug('dest', dest);
     formatDebug('ignore', ignore);
@@ -107,10 +107,10 @@ function debug (cb) {
     formatDebug('date', date);
 
     if (true) {
-        cb(chalk.red('that is all that was programmed - aborting')); //temporary abort
+        next(chalk.red('that is all that was programmed - aborting')); //temporary abort
     }
     else {
-        cb(null);
+        next(null);
     }
 }
 
