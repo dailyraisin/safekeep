@@ -80,10 +80,21 @@ function finalVariables (cb) {
 
 function verifyInkwellIgnore (cb) {
     console.log(chalk.blue('step 5'));
-
-    console.log(chalk.magenta('verify inkwell file here'));
-
-    cb(null);
+    fs.access(ignore, fs.R_OK, ifIgnoreNotFound);
+    function ifIgnoreNotFound(err) {
+        if (err && path.dirname(ignore) === '/') {
+            console.log(chalk.bgYellow(ignore + ' does not exist in this or any parent directories'));
+            process.exit(1);
+        }
+        else if (err) {
+            ignore = path.normalize(path.dirname(ignore) + '/../.inkwellignore');
+            fs.access(ignore, fs.R_OK, ifIgnoreNotFound);
+            console.log('lookingForIgnore again!');
+        }
+        else {
+            cb(null);
+        }
+    }
 }
 
 function debug (cb) {
@@ -108,25 +119,7 @@ function formatDebug (label, value) {
 }
 
 
-//
-//Inkwell.prototype.verifyInkwellignore = function() {//look for .inkwellignore
-//    var self = this;
-//    fs.access(self.ignore, fs.R_OK, ifIgnoreNotFound);//ifIgnoreNotFound is callback
-//    function ifIgnoreNotFound(err) {
-//        if (err && path.dirname(self.ignore) === '/') {
-//            console.log(chalk.bgYellow(self.ignore + ' does not exist in this or any parent directories'));
-//            process.exit(1);
-//        }
-//        else if (err) {
-//            self.ignore = path.normalize(path.dirname(self.ignore) + '/../.inkwellignore');
-//            fs.access(self.ignore, fs.R_OK, ifIgnoreNotFound);
-//            console.log('lookingForIgnore again!');
-//        }
-//        else {
-//            self.makeDestDir();
-//        }
-//    }
-//};
+
 //
 //Inkwell.prototype.makeDestDir = function() {
 //    var self = this;
