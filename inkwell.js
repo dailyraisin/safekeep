@@ -29,6 +29,9 @@ async.series([
     linkLatestBackup,
     makeBackupDir,
     rSync,
+    moveToComplete,
+    clearOldLink,
+    makeNewLink,
     debug
 ], handleError);
 
@@ -180,6 +183,27 @@ function rSync (next) {
     });
 }
 
+
+function moveToComplete (next) {
+    console.log(chalk.blue('step 11'));
+    //console.log('Now's the time to move incomplete to complete.');
+    mv(incomplete, complete, function(err) {}); //is this callback used on success too?
+    next(null);
+}
+
+function clearOldLink (next) {
+    console.log(chalk.blue('step 12'));
+    //console.log('Now's the time to clear /current');
+    fs.unlink(current, function(){}); //maybe put makeNewLink as callback
+    next(null);
+}
+
+function makeNewLink (next) {
+    console.log(chalk.blue('step 13'));
+    //console.log('Now's the time to link /current');
+    fs.symlink(path.basename(complete) + '/', current, function(){}); //fs.symlink(target, linkname, callback)
+}
+
 function debug (next) {
     formatDebug('source', source);
     formatDebug('dest', dest);
@@ -200,27 +224,3 @@ function debug (next) {
 function formatDebug (label, value) {
     console.log(sprintf('%12s:', label), chalk.yellow(value));
 }
-
-
-
-
-//
-//Inkwell.prototype.moveToComplete = function() {
-//    var self = this;
-//    //console.log('Now's the time to move incomplete to complete.');
-//    mv(self.incomplete, self.complete, function(err) {}); //is this callback used on success too?
-//    this.clearOldLink();
-//};
-//
-//Inkwell.prototype.clearOldLink = function() {
-//    var self = this;
-//    //console.log('Now's the time to clear /current');
-//    fs.unlink(self.current, function(){}); //maybe put makeNewLink as callback
-//    this.makeNewLink();
-//};
-//
-//Inkwell.prototype.makeNewLink = function() {
-//    var self = this;
-//    //console.log('Now's the time to link /current');
-//    fs.symlink(path.basename(self.complete) + '/', self.current, function(){}); //fs.symlink(target, linkname, callback)
-//};
