@@ -16,6 +16,7 @@ var source = process.argv[2];
 var dest = process.argv[3];
 
 var ignore, incomplete, complete, current, linkDest;
+var destContents = [];
 
 async.series([
     cliArgs,
@@ -24,6 +25,8 @@ async.series([
     finalVariables,
     verifyInkwellIgnore,
     makeDestDir,
+    replaceLinkIfMissing,
+    linkLatestBackup,
     debug
 ], handleError);
 
@@ -117,6 +120,26 @@ function makeDestDir (next) {
     });
 }
 
+function replaceLinkIfMissing (next) {
+    fs.readdir(dest, function(err, files){//read dest directory and pass the array "files"
+        destContents = files;
+        next(null);
+    });
+}
+
+function linkLatestBackup (next) {//did I just use a closure?
+    var files = destContents;
+    var backups = files.filter(filterBack);
+    var latestBackup = backups.sort().reverse()[0];
+    fs.symlink(latestBackup + '/', current, function(){
+        next(null);
+    });
+}
+
+function filterBack (thisFile) {//callback for array.filter(callback), gets (element, index, array)
+    return thisFile.substr(0,5) === 'back-';
+}
+
 function debug (next) {
     formatDebug('source', source);
     formatDebug('dest', dest);
@@ -140,46 +163,8 @@ function formatDebug (label, value) {
 
 
 
-//
-//Inkwell.prototype.makeDestDir = function() {
-//    var self = this;
-//    mkdirp(dest, function (err) {//if destination doesn't exist, make directory
-//        if (err) {
-//            console.log('Unable to create ' + self.dest);
-//            process.exit(1);
-//        }
-//        else {//AFTER destination is created (if it didn't exist already), then make sure destination is writeable
-//            fs.access(self.dest, fs.W_OK, function(err) {
-//                if (err) {
-//                    console.log(self.dest + ' is not writable');
-//                    process.exit(1);
-//                }
-//            });
-//            self.replaceLinkIfMissing();
-//        }
-//    });
-//};
-//
-//Inkwell.prototype.replaceLinkIfMissing = function() {
-//    var self = this;
-//    fs.readdir(dest, function(err, files){//read dest directory and pass the array "files"
-//        self.linkLatestBackup(files);
-//    });
-//};
-//
-//Inkwell.prototype.linkLatestBackup = function(files) {//did I just use a closure?
-//    var self = this;
-//    this.backups = files.filter(this.filterBack);
-//    this.latestBackup = this.backups.sort().reverse()[0];
-//    fs.symlink(this.latestBackup + '/', this.current, function(){
-//        self.makeBackupDir();
-//    });
-//};
-//
-//Inkwell.prototype.filterBack = function(thisFile) {//callback for array.filter(callback), gets (element, index, array)
-//    return thisFile.substr(0,5) === 'back-';
-//};
-//
+
+
 //Inkwell.prototype.makeBackupDir = function() {
 //    var self = this;
 //    mkdirp(this.complete, function (err) {//create 'completed' directory
