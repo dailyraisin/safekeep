@@ -92,8 +92,7 @@ function verifyInkwellIgnore (next) {
     fs.access(ignore, fs.R_OK, ifIgnoreNotFound);
     function ifIgnoreNotFound(err) {
         if (err && path.dirname(ignore) === '/') {
-            console.log(chalk.bgYellow(ignore + ' does not exist in this or any parent directories'));
-            process.exit(1);
+            next(ignore + ' does not exist in this or any parent directories');
         }
         else if (err) {
             ignore = path.normalize(path.dirname(ignore) + '/../.inkwellignore');
@@ -110,14 +109,12 @@ function makeDestDir (next) {
     console.log(chalk.blue('step 6'));
     mkdirp(dest, function (err) {//if destination doesn't exist, make directory
         if (err) {
-            console.log('Unable to create ' + dest);
-            process.exit(1);
+            next('Unable to create ' + dest);
         }
         else {//AFTER destination is created (if it didn't exist already), then make sure destination is writeable
             fs.access(dest, fs.W_OK, function(err) {
                 if (err) {
-                    console.log(dest + ' is not writable');
-                    process.exit(1);
+                    next(dest + ' is not writable');
                 }
                 else next(null);
             });
@@ -151,8 +148,7 @@ function makeBackupDir (next) {
     console.log(chalk.blue('step 9'));
     mkdirp(complete, function (err) {//create 'completed' directory
         if (err) {
-            console.log('Unable to create ' + complete);
-            process.exit(1);
+            next('Unable to create ' + complete);
         }
         else {
             console.log(chalk.cyan('Created ' + complete));
@@ -177,8 +173,7 @@ function rSync (next) {
             next(null);
         }
         else {
-            console.log(chalk.red('rsync was unsuccessful ' + cmd));
-            process.exit(1);
+            next('rsync was unsuccessful ' + cmd);
         }
     });
 }
@@ -186,21 +181,18 @@ function rSync (next) {
 
 function moveToComplete (next) {
     console.log(chalk.blue('step 11'));
-    //console.log('Now's the time to move incomplete to complete.');
-    mv(incomplete, complete, function(err) {}); //is this callback used on success too?
+    mv(incomplete, complete, function(err) {});
     next(null);
 }
 
 function clearOldLink (next) {
     console.log(chalk.blue('step 12'));
-    //console.log('Now's the time to clear /current');
-    fs.unlink(current, function(){}); //maybe put makeNewLink as callback
+    fs.unlink(current, function(){});
     next(null);
 }
 
 function makeNewLink (next) {
     console.log(chalk.blue('step 13'));
-    //console.log('Now's the time to link /current');
     fs.symlink(path.basename(complete) + '/', current, function(){}); //fs.symlink(target, linkname, callback)
 }
 
@@ -214,7 +206,7 @@ function debug (next) {
     formatDebug('date', date);
 
     if (true) {
-        next(chalk.red('that is all that was programmed - aborting')); //temporary abort
+        next('that is all that was programmed - aborting'); //temporary abort
     }
     else {
         next(null);
