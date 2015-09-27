@@ -20,12 +20,12 @@ var destContents = [];
 
 async.series([
     cliArgs,
-    checkCurrentLinkExists,
+    sourceIsDir,
     formatArgs,
     finalVariables,
     verifyInkwellIgnore,
     makeDestDir,
-    replaceLinkIfMissing,
+    readDir,
     linkLatestBackup,
     makeBackupDir,
     rSync,
@@ -53,7 +53,7 @@ function cliArgs (next) {
     }
 }
 
-function checkCurrentLinkExists (next) {
+function sourceIsDir (next) {
     console.log(chalk.blue('step 2'));
     fs.lstat(source, function (err, stats) {
         if (err || !stats.isDirectory()) {
@@ -122,7 +122,7 @@ function makeDestDir (next) {
     });
 }
 
-function replaceLinkIfMissing (next) {
+function readDir (next) {
     console.log(chalk.blue('step 7'));
     fs.readdir(dest, function(err, files){//read dest directory and pass the array "files"
         destContents = files;
