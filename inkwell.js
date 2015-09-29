@@ -44,7 +44,7 @@ function handleError (err) {
 }
 
 function cliArgs (next) {
-    console.log(chalk.blue('step 1'));
+    //console.log(chalk.blue('step 1'));
 
     if (source === undefined || dest === undefined) {
         next('Usage: inkwell source destination');
@@ -55,7 +55,7 @@ function cliArgs (next) {
 }
 
 function sourceIsDir (next) {
-    console.log(chalk.blue('step 2'));
+    //console.log(chalk.blue('step 2'));
     fs.lstat(source, function (err, stats) {
         if (err || !stats.isDirectory()) {
             next(source + ' is not a directory. I can only back up directories.');
@@ -67,7 +67,7 @@ function sourceIsDir (next) {
 }
 
 function formatArgs (next) {
-    console.log(chalk.blue('step 3'));
+    //console.log(chalk.blue('step 3'));
     source = path.resolve(source); //return absolute path and remove possible trailing slash
     dest = path.resolve(dest);
     if (path.basename(dest) === path.basename(source)) { //avoid double nesting
@@ -78,7 +78,7 @@ function formatArgs (next) {
 }
 
 function finalVariables (next) {
-    console.log(chalk.blue('step 4'));
+    //console.log(chalk.blue('step 4'));
 
     ignore = source + '/.inkwellignore';
     incomplete = dest + '/incomplete-back-' + date;
@@ -89,7 +89,7 @@ function finalVariables (next) {
 }
 
 function verifyInkwellIgnore (next) {
-    console.log(chalk.blue('step 5'));
+    //console.log(chalk.blue('step 5'));
     fs.access(ignore, fs.R_OK, ifIgnoreNotFound);
     function ifIgnoreNotFound(err) {
         if (err && path.dirname(ignore) === '/') {
@@ -98,7 +98,7 @@ function verifyInkwellIgnore (next) {
         else if (err) {
             ignore = path.normalize(path.dirname(ignore) + '/../.inkwellignore');
             fs.access(ignore, fs.R_OK, ifIgnoreNotFound);
-            console.log('lookingForIgnore again!');
+            //console.log('lookingForIgnore again!');
         }
         else {
             next(null);
@@ -107,7 +107,7 @@ function verifyInkwellIgnore (next) {
 }
 
 function makeDestDir (next) {
-    console.log(chalk.blue('step 6'));
+    //console.log(chalk.blue('step 6'));
     mkdirp(dest, function (err) {//if destination doesn't exist, make directory
         if (err) {
             next('Unable to create ' + dest);
@@ -126,7 +126,7 @@ function makeDestDir (next) {
 }
 
 function readDir (next) {
-    console.log(chalk.blue('step 7'));
+    //console.log(chalk.blue('step 7'));
     fs.readdir(dest, function(err, files) { //read dest directory and pass the array "files"
         if (err) {
             next(err);
@@ -151,7 +151,7 @@ function readDir (next) {
 //}
 
 function linkLatestBackup (next) {
-    console.log(chalk.blue('step 8'));
+    //console.log(chalk.blue('step 8'));
     var files = destContents;
     var backups = files.filter(filterBack);
     var latestBackup = backups.sort().reverse()[0];
@@ -172,7 +172,7 @@ function filterBack (thisFile) {//callback for array.filter(callback), gets (ele
 }
 
 function makeBackupDir (next) {
-    console.log(chalk.blue('step 9'));
+    //console.log(chalk.blue('step 9'));
     mkdirp(complete, function (err) {//create 'completed' directory
         if (err) {
             next('Unable to create ' + complete);
@@ -185,7 +185,7 @@ function makeBackupDir (next) {
 }
 
 function rSync (next) {
-    console.log(chalk.blue('step 10'));
+    //console.log(chalk.blue('step 10'));
     var rsync = new Rsync()
     .flags('az')
     .set('delete')
@@ -207,7 +207,7 @@ function rSync (next) {
 
 
 function moveToComplete (next) {
-    console.log(chalk.blue('step 11'));
+    //console.log(chalk.blue('step 11'));
     mv(incomplete, complete, function(err) {
         if (err) {
             next(err);
@@ -219,7 +219,7 @@ function moveToComplete (next) {
 }
 
 function clearOldLink (next) {
-    console.log(chalk.blue('step 12'));
+    //console.log(chalk.blue('step 12'));
     fs.unlink(current, function (err) {
         if (err) {
             next(err);
@@ -231,7 +231,7 @@ function clearOldLink (next) {
 }
 
 function makeNewLink (next) {
-    console.log(chalk.blue('step 13'));
+    //console.log(chalk.blue('step 13'));
     fs.symlink(path.basename(complete) + '/', current, function (err) {
         if (err) {
             next(err);
