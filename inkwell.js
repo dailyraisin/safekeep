@@ -93,7 +93,7 @@ function verifyInkwellIgnore (next) {
     fs.access(ignore, fs.R_OK, ifIgnoreNotFound);
     function ifIgnoreNotFound(err) {
         if (err && path.dirname(ignore) === '/') {
-            next(ignore + ' does not exist in this or any parent directories');
+            next('.inkwellignore does not exist in ' + path.resolve(path.dirname()) + ' or any parent directories');
         }
         else if (err) {
             ignore = path.normalize(path.dirname(ignore) + '/../.inkwellignore');
