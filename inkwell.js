@@ -9,7 +9,7 @@ var Rsync = require('rsync');
 var moment = require('moment');
 var chalk = require('chalk');
 
-var date = moment().format('YYYY-MM-DD.hh-mm-ss');
+var date = moment().format('YYYY-MM-DD.HH-mm-ss');
 
 var source = process.argv[2];
 var dest = process.argv[3];
