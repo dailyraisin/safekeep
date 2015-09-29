@@ -26,6 +26,7 @@ async.series([
     verifyInkwellIgnore,
     makeDestDir,
     readDir,
+    //checkCurrent,
     linkLatestBackup,
     makeBackupDir,
     rSync,
@@ -127,10 +128,27 @@ function makeDestDir (next) {
 function readDir (next) {
     console.log(chalk.blue('step 7'));
     fs.readdir(dest, function(err, files) { //read dest directory and pass the array "files"
-        destContents = files;
-        next(null);
+        if (err) {
+            next(err);
+        }
+        else {
+            destContents = files;
+            next(null);
+        }
     });
 }
+
+//function checkCurrent (next) {
+//    console.log(chalk.blue('step 7b'));
+//    fs.lstat(current, function (err, stats) {
+//        if (err || !stats.isSymbolicLink()) {
+//            next(err);
+//        }
+//        else {
+//            next(null);
+//        }
+//    });
+//}
 
 function linkLatestBackup (next) {
     console.log(chalk.blue('step 8'));
@@ -138,11 +156,13 @@ function linkLatestBackup (next) {
     var backups = files.filter(filterBack);
     var latestBackup = backups.sort().reverse()[0];
     fs.symlink(latestBackup + '/', current, function (err) {
-        if (err) {
-            next(err);
+        //var util = require('util');
+        //console.log(util.inspect(err));
+        if (err === null || err.code === 'EEXIST') {
+            next(null);
         }
         else {
-            next(null);
+            next(err);
         }
     });
 }
@@ -230,13 +250,7 @@ function debug (next) {
     formatDebug('complete', complete);
     formatDebug('linkDest', linkDest);
     formatDebug('date', date);
-
-    if (true) {
-        next('that is all that was programmed - aborting'); //temporary abort
-    }
-    else {
-        next(null);
-    }
+    next(null);
 }
 
 function formatDebug (label, value) {
