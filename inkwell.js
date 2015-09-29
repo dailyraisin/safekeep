@@ -1,5 +1,6 @@
 'use strict';
 
+var async = require('async');
 var fs = require('fs');
 var path = require('path');
 var mkdirp = require('mkdirp');
@@ -8,167 +9,256 @@ var Rsync = require('rsync');
 var moment = require('moment');
 var chalk = require('chalk');
 
+var date = moment().format('YYYY-MM-DD.hh-mm-ss');
+
 var source = process.argv[2];
 var dest = process.argv[3];
 
+var ignore, incomplete, complete, current, linkDest;
+var destContents = [];
 
-function Inkwell (source, dest) {
-    this.source = source;
-    this.dest = dest;
+async.series([
+    cliArgs,
+    sourceIsDir,
+    formatArgs,
+    finalVariables,
+    verifyInkwellIgnore,
+    makeDestDir,
+    readDir,
+    //checkCurrent,
+    linkLatestBackup,
+    makeBackupDir,
+    rSync,
+    moveToComplete,
+    clearOldLink,
+    makeNewLink,
+    //debug
+], handleError);
+
+function handleError (err) {
+    if (err) {
+        console.log(chalk.red(err));
+        process.exit(1);
+    }
 }
 
-Inkwell.prototype.initialize = function() { // verify that there are two arguments, source and destination, and that source is a directory
-    var self = this;
-    if (this.source === undefined) {
-        console.log('Usage: inkwell source destination');
-        process.exit(1);
-    }
-    else if (this.dest === undefined) {
-        console.log('Usage: inkwell source destination');
-        process.exit(1);
-    }
-    if (fs.lstatSync(this.source).isDirectory() === false) {
-        console.log(self.source + ' is not a directory. I can only back up directories.');
-        process.exit(1);
-    }
-    this.formatArgs();
-};
+function cliArgs (next) {
+    //console.log(chalk.blue('step 1'));
 
-Inkwell.prototype.formatArgs = function() {
-    var self = this;
-    this.source = path.resolve(this.source); //return absolute path and remove possible trailing slash
-    this.dest = path.resolve(this.dest);
-    if (path.basename(this.dest) === path.basename(this.source )) { //avoid double nesting
-        self.dest = path.dirname(self.dest);
+    if (source === undefined || dest === undefined) {
+        next('Usage: inkwell source destination');
     }
-    self.dest = self.dest + '/' + path.basename(this.source); //add basename of source to destination
-    this.finalVariables();
-};
+    else {
+        next(null);
+    }
+}
 
-Inkwell.prototype.finalVariables = function() {
-    this.ignore = this.source + '/.inkwellignore';
-    this.date = moment().format('YYYY-MM-DD.hh-mm-ss');
-    this.incomplete = this.dest + '/incomplete-back-' + this.date;
-    this.complete = this.dest + '/back-' + this.date;
-    this.current = this.dest + '/current';
-    this.linkDest = this.current;
-    this.verifyInkwellignore();
-};
+function sourceIsDir (next) {
+    //console.log(chalk.blue('step 2'));
+    fs.lstat(source, function (err, stats) {
+        if (err || !stats.isDirectory()) {
+            next(source + ' is not a directory. I can only back up directories.');
+        }
+        else {
+            next(null);
+        }
+    });
+}
 
-Inkwell.prototype.verifyInkwellignore = function() {//look for .inkwellignore
-    var self = this;
-    fs.access(self.ignore, fs.R_OK, ifIgnoreNotFound);//ifIgnoreNotFound is callback
-    function ifIgnoreNotFound(err) {
-        if (err && path.dirname(self.ignore) === '/') {
-            console.log(chalk.bgYellow(self.ignore + ' does not exist in this or any parent directories'));
-            process.exit(1);
+function formatArgs (next) {
+    //console.log(chalk.blue('step 3'));
+    source = path.resolve(source); //return absolute path and remove possible trailing slash
+    dest = path.resolve(dest);
+    if (path.basename(dest) === path.basename(source)) { //avoid double nesting
+        dest = path.dirname(dest);
+    }
+    dest = dest + '/' + path.basename(source); //add basename of source to destination
+    next(null);
+}
+
+function finalVariables (next) {
+    //console.log(chalk.blue('step 4'));
+
+    ignore = source + '/.inkwellignore';
+    incomplete = dest + '/incomplete-back-' + date;
+    complete = dest + '/back-' + date;
+    current = dest + '/current';
+    linkDest = current;
+    next(null);
+}
+
+function verifyInkwellIgnore (next) {
+    //console.log(chalk.blue('step 5'));
+    fs.access(ignore, fs.R_OK, ifIgnoreNotFound(next));
+}
+
+function ifIgnoreNotFound (next) {
+
+    return function (err) {
+        //debug(function nextStub () {});
+        if (err && path.dirname(ignore) === '/') {
+            next('.inkwellignore does not exist in ' + path.resolve(source) + ' or any parent directories');
         }
         else if (err) {
-            self.ignore = path.normalize(path.dirname(self.ignore) + '/../.inkwellignore');
-            fs.access(self.ignore, fs.R_OK, ifIgnoreNotFound);
-            console.log('lookingForIgnore again!');
+            ignore = path.normalize(path.dirname(ignore) + '/../.inkwellignore');
+            verifyInkwellIgnore(next);
         }
         else {
-            self.makeDestDir();
+            next(null);
         }
-    }
-};
+    };
+}
 
-Inkwell.prototype.makeDestDir = function() {
-    var self = this;
-    mkdirp(this.dest, function (err) {//if destination doesn't exist, make directory
+function makeDestDir (next) {
+    //console.log(chalk.blue('step 6'));
+    mkdirp(dest, function (err) {//if destination doesn't exist, make directory
         if (err) {
-            console.log('Unable to create ' + self.dest);
-            process.exit(1);
+            next('Unable to create ' + dest);
         }
         else {//AFTER destination is created (if it didn't exist already), then make sure destination is writeable
-            fs.access(self.dest, fs.W_OK, function(err) {
+            fs.access(dest, fs.W_OK, function(err) {
                 if (err) {
-                    console.log(self.dest + ' is not writable');
-                    process.exit(1);
+                    next(dest + ' is not writable');
+                }
+                else {
+                    next(null);
                 }
             });
-            self.replaceLinkIfMissing();
         }
     });
-};
+}
 
-Inkwell.prototype.replaceLinkIfMissing = function() {
-    var self = this;
-    fs.readdir(this.dest, function(err, files){//read this.dest directory and pass the array "files"
-        self.linkLatestBackup(files);
-    });
-};
-
-Inkwell.prototype.linkLatestBackup = function(files) {//did I just use a closure?
-    var self = this;
-    this.backups = files.filter(this.filterBack);
-    this.latestBackup = this.backups.sort().reverse()[0];
-    fs.symlink(this.latestBackup + '/', this.current, function(){
-        self.makeBackupDir();
-    });
-};
-
-Inkwell.prototype.filterBack = function(thisFile) {//callback for array.filter(callback), gets (element, index, array)
-    return thisFile.substr(0,5) === 'back-';
-};
-
-Inkwell.prototype.makeBackupDir = function() {
-    var self = this;
-    mkdirp(this.complete, function (err) {//create 'completed' directory
+function readDir (next) {
+    //console.log(chalk.blue('step 7'));
+    fs.readdir(dest, function(err, files) { //read dest directory and pass the array "files"
         if (err) {
-            console.log('Unable to create ' + self.complete);
-            process.exit(1);
+            next(err);
         }
         else {
-            console.log(chalk.cyan('Created ' + self.complete));
+            destContents = files;
+            next(null);
         }
-        self.rSync();
     });
+}
 
-};
+//function checkCurrent (next) {
+//    console.log(chalk.blue('step 7b'));
+//    fs.lstat(current, function (err, stats) {
+//        if (err || !stats.isSymbolicLink()) {
+//            next(err);
+//        }
+//        else {
+//            next(null);
+//        }
+//    });
+//}
 
-Inkwell.prototype.rSync = function() {
-    var self = this;
+function linkLatestBackup (next) {
+    //console.log(chalk.blue('step 8'));
+    var files = destContents;
+    var backups = files.filter(filterBack);
+    var latestBackup = backups.sort().reverse()[0];
+    fs.symlink(latestBackup + '/', current, function (err) {
+        //var util = require('util');
+        //console.log(util.inspect(err));
+        if (err === null || err.code === 'EEXIST') {
+            next(null);
+        }
+        else {
+            next(err);
+        }
+    });
+}
+
+function filterBack (thisFile) {//callback for array.filter(callback), gets (element, index, array)
+    return thisFile.substr(0,5) === 'back-';
+}
+
+function makeBackupDir (next) {
+    //console.log(chalk.blue('step 9'));
+    mkdirp(complete, function (err) {//create 'completed' directory
+        if (err) {
+            next('Unable to create ' + complete);
+        }
+        else {
+            console.log(chalk.cyan('Created ' + complete));
+            next(null);
+        }
+    });
+}
+
+function rSync (next) {
+    //console.log(chalk.blue('step 10'));
     var rsync = new Rsync()
     .flags('az')
-	  .set('delete')
-	  .set('delete-excluded')
-	  .set('exclude-from', self.ignore)
-	  .set('link-dest', self.linkDest)
-	  .source(self.source)
-	  .destination(self.incomplete);
+    .set('delete')
+    .set('delete-excluded')
+    .set('exclude-from', ignore)
+    .set('link-dest', linkDest)
+    .source(source)
+    .destination(incomplete);
 
     rsync.execute(function(error, code, cmd){
         if (code === 0) { //exit code 0 means rsync was successful
-            self.moveToComplete();
+            next(null);
         }
         else {
-            console.log(chalk.red('rsync was unsuccessful ' + cmd));
-            process.exit(1);
+            next('rsync was unsuccessful ' + cmd);
         }
     });
-};
+}
 
-Inkwell.prototype.moveToComplete = function() {
-    var self = this;
-    //console.log('Now's the time to move incomplete to complete.');
-    mv(self.incomplete, self.complete, function(err) {}); //is this callback used on success too?
-    this.clearOldLink();
-};
 
-Inkwell.prototype.clearOldLink = function() {
-    var self = this;
-    //console.log('Now's the time to clear /current');
-    fs.unlink(self.current, function(){}); //maybe put makeNewLink as callback
-    this.makeNewLink();
-};
+function moveToComplete (next) {
+    //console.log(chalk.blue('step 11'));
+    mv(incomplete, complete, function(err) {
+        if (err) {
+            next(err);
+        }
+        else {
+            next(null);
+        }
+    });
+}
 
-Inkwell.prototype.makeNewLink = function() {
-    var self = this;
-    //console.log('Now's the time to link /current');
-    fs.symlink(path.basename(self.complete) + '/', self.current, function(){}); //fs.symlink(target, linkname, callback)
-};
+function clearOldLink (next) {
+    //console.log(chalk.blue('step 12'));
+    fs.unlink(current, function (err) {
+        if (err) {
+            next(err);
+        }
+        else {
+            next(null);
+        }
+    });
+}
 
-var inkwell = new Inkwell(source, dest);
-inkwell.initialize();
+function makeNewLink (next) {
+    //console.log(chalk.blue('step 13'));
+    fs.symlink(path.basename(complete) + '/', current, function (err) {
+        if (err) {
+            next(err);
+        }
+        else {
+            next(null);
+        }
+    });
+}
+
+//debugging
+//var sprintf = require('sprintf');
+//
+//function debug (next) {
+//    formatDebug('source', source);
+//    formatDebug('dest', dest);
+//    formatDebug('ignore', ignore);
+//    formatDebug('incomplete', incomplete);
+//    formatDebug('complete', complete);
+//    formatDebug('linkDest', linkDest);
+//    formatDebug('date', date);
+//    next(null);
+//}
+//
+//function formatDebug (label, value) {
+//    console.log(sprintf('%12s:', label), chalk.yellow(value));
+//}
