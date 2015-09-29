@@ -33,7 +33,7 @@ async.series([
     moveToComplete,
     clearOldLink,
     makeNewLink,
-    debug
+    //debug
 ], handleError);
 
 function handleError (err) {
@@ -90,20 +90,24 @@ function finalVariables (next) {
 
 function verifyInkwellIgnore (next) {
     //console.log(chalk.blue('step 5'));
-    fs.access(ignore, fs.R_OK, ifIgnoreNotFound);
-    function ifIgnoreNotFound(err) {
+    fs.access(ignore, fs.R_OK, ifIgnoreNotFound(next));
+}
+
+function ifIgnoreNotFound (next) {
+
+    return function (err) {
+        //debug(function nextStub () {});
         if (err && path.dirname(ignore) === '/') {
-            next('.inkwellignore does not exist in ' + path.resolve(path.dirname()) + ' or any parent directories');
+            next('.inkwellignore does not exist in ' + path.resolve(source) + ' or any parent directories');
         }
         else if (err) {
             ignore = path.normalize(path.dirname(ignore) + '/../.inkwellignore');
-            fs.access(ignore, fs.R_OK, ifIgnoreNotFound);
-            //console.log('lookingForIgnore again!');
+            fs.access(ignore, fs.R_OK, ifIgnoreNotFound(next));
         }
         else {
             next(null);
         }
-    }
+    };
 }
 
 function makeDestDir (next) {
