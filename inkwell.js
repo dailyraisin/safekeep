@@ -116,7 +116,9 @@ function makeDestDir (next) {
                 if (err) {
                     next(dest + ' is not writable');
                 }
-                else next(null);
+                else {
+                    next(null);
+                }
             });
         }
     });
@@ -124,19 +126,24 @@ function makeDestDir (next) {
 
 function readDir (next) {
     console.log(chalk.blue('step 7'));
-    fs.readdir(dest, function(err, files){//read dest directory and pass the array "files"
+    fs.readdir(dest, function(err, files) { //read dest directory and pass the array "files"
         destContents = files;
         next(null);
     });
 }
 
-function linkLatestBackup (next) {//did I just use a closure?
+function linkLatestBackup (next) {
     console.log(chalk.blue('step 8'));
     var files = destContents;
     var backups = files.filter(filterBack);
     var latestBackup = backups.sort().reverse()[0];
-    fs.symlink(latestBackup + '/', current, function(){
-        next(null);
+    fs.symlink(latestBackup + '/', current, function (err) {
+        if (err) {
+            next(err);
+        }
+        else {
+            next(null);
+        }
     });
 }
 
@@ -161,12 +168,12 @@ function rSync (next) {
     console.log(chalk.blue('step 10'));
     var rsync = new Rsync()
     .flags('az')
-	  .set('delete')
-	  .set('delete-excluded')
-	  .set('exclude-from', ignore)
-	  .set('link-dest', linkDest)
-	  .source(source)
-	  .destination(incomplete);
+    .set('delete')
+    .set('delete-excluded')
+    .set('exclude-from', ignore)
+    .set('link-dest', linkDest)
+    .source(source)
+    .destination(incomplete);
 
     rsync.execute(function(error, code, cmd){
         if (code === 0) { //exit code 0 means rsync was successful
@@ -181,19 +188,38 @@ function rSync (next) {
 
 function moveToComplete (next) {
     console.log(chalk.blue('step 11'));
-    mv(incomplete, complete, function(err) {});
-    next(null);
+    mv(incomplete, complete, function(err) {
+        if (err) {
+            next(err);
+        }
+        else {
+            next(null);
+        }
+    });
 }
 
 function clearOldLink (next) {
     console.log(chalk.blue('step 12'));
-    fs.unlink(current, function(){});
-    next(null);
+    fs.unlink(current, function (err) {
+        if (err) {
+            next(err);
+        }
+        else {
+            next(null);
+        }
+    });
 }
 
 function makeNewLink (next) {
     console.log(chalk.blue('step 13'));
-    fs.symlink(path.basename(complete) + '/', current, function(){}); //fs.symlink(target, linkname, callback)
+    fs.symlink(path.basename(complete) + '/', current, function (err) {
+        if (err) {
+            next(err);
+        }
+        else {
+            next(null);
+        }
+    });
 }
 
 function debug (next) {
