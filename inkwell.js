@@ -1,6 +1,5 @@
 'use strict';
 
-var sprintf = require('sprintf');
 var async = require('async');
 var fs = require('fs');
 var path = require('path');
@@ -246,17 +245,20 @@ function makeNewLink (next) {
     });
 }
 
-function debug (next) {
-    formatDebug('source', source);
-    formatDebug('dest', dest);
-    formatDebug('ignore', ignore);
-    formatDebug('incomplete', incomplete);
-    formatDebug('complete', complete);
-    formatDebug('linkDest', linkDest);
-    formatDebug('date', date);
-    next(null);
-}
-
-function formatDebug (label, value) {
-    console.log(sprintf('%12s:', label), chalk.yellow(value));
-}
+//debugging
+//var sprintf = require('sprintf');
+//
+//function debug (next) {
+//    formatDebug('source', source);
+//    formatDebug('dest', dest);
+//    formatDebug('ignore', ignore);
+//    formatDebug('incomplete', incomplete);
+//    formatDebug('complete', complete);
+//    formatDebug('linkDest', linkDest);
+//    formatDebug('date', date);
+//    next(null);
+//}
+//
+//function formatDebug (label, value) {
+//    console.log(sprintf('%12s:', label), chalk.yellow(value));
+//}
