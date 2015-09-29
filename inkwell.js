@@ -101,7 +101,7 @@ function ifIgnoreNotFound (next) {
         }
         else if (err) {
             ignore = path.normalize(path.dirname(ignore) + '/../.inkwellignore');
-            fs.access(ignore, fs.R_OK, ifIgnoreNotFound(next));
+            verifyInkwellIgnore(next);
         }
         else {
             next(null);
