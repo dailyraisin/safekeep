@@ -10,8 +10,11 @@
     "type": "git",
     "url": "git@bitbucket.org:tysoeh/inkwell.git"
   },
-  "author": "",
-  "license": "none",
+  "authors": [
+    "Joe K <joe@dailyraisin.com>",
+    "Ty Soehngen <ty.soeh@gmail.com>"
+  ],
+  "license": "MIT",
   "dependencies": {
     "async": "^1.4.2",
     "chalk": "^1.1.1",
