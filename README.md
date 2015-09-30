@@ -8,7 +8,6 @@ Installation goes through NPM:
 $ npm install -g inkwell
 ```
 ## License
-
 ## Usage
 If none exists, create a `.inkwellignore` in your `<source>` directory or one of its parents.
 
@@ -17,9 +16,9 @@ Then use:
 $ inkwell <source> <destination>
 ```
 
-Inkwell will fully backup any files that have been modified since your last backup, while only hard linking any unchanged files to their most recent backups.
+Any changes made to `<source>` will be fully backed up! Otherwise `inkwell` knows not make full copies of unchanged files.
 
-Each time inkwell is run, a timestamped backup is made with the convention `back-YYYY-MM-DD.HH-mm-ss`.
+Each time inkwell is run, a timestamped backup is made with the convention `back-YYYY-MM-DD.HH-mm-ss`, as well as a link called `current` which points to it.
 
 A `<destination>` directory might look something like this:
 ```
