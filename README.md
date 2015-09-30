@@ -10,14 +10,18 @@ $ npm install -g inkwell
 ## License
 
 ## Usage
-First, create `.inkwellignore` in your `<source>` directory or one of its parents.
+If none exists, create a `.inkwellignore` in your `<source>` directory or one of its parents.
+
+Then use:
 ```
 $ inkwell <source> <destination>
 ```
 
-Inkwell will backup any files that have been modified since your last backup, and create hard links to the most recent backups of files that haven't been modified.
+Inkwell will fully backup any files that have been modified since your last backup, while only hard linking any unchanged files to their most recent backups.
 
-A `<destination>` directory might look like this, for example:
+Each time inkwell is run, a timestamped backup is made with the convention `back-YYYY-MM-DD.HH-mm-ss`.
+
+A `<destination>` directory might look something like this:
 ```
 Sep 21 09:05 back-2015-09-21.09-05-18
 Sep 21 09:51 back-2015-09-21.09-51-11
