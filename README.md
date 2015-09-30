@@ -9,9 +9,9 @@ $ npm install -g inkwell
 ```
 ## License
 ## Usage
-If none exists, create a `.inkwellignore` in your `<source>` directory or one of its parents.
+Requires `.inkwellignore` in `<source>` directory or one of its parents.
 
-Then use:
+Usage:
 ```
 $ inkwell <source> <destination>
 ```
