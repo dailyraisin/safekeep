@@ -14,7 +14,7 @@
     "Joe K <joe@dailyraisin.com>",
     "Ty Soehngen <ty.soeh@gmail.com>"
   ],
-  "license": "MIT",
+  "license": "UNLICENSED",
   "dependencies": {
     "async": "^1.4.2",
     "chalk": "^1.1.1",
