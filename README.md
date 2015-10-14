@@ -40,6 +40,10 @@ Each time inkwell is run, a timestamped backup is made with the convention `back
 
 Any changes made to `<source>` are incrementally backed up.
 
+## Requirements
+
+Node v0.12
+
 ## License
 
 Unlicensed. 
