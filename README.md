@@ -16,7 +16,7 @@ $ npm install -g safekeep
 $ safekeep <source> <destination>
 ```
 
-Requires `.safekeepignore` in `<source>` directory or one of its parents.
+Requires `.safekeepignore` in the `<source>` directory or a parent directory.
 
 ## Example
 
