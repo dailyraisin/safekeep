@@ -1,19 +1,19 @@
-# inkwell.js
+# Safekeep
 
 Inkwell is a tool for making incremental backups, written in Node.js.
 
 ## Installation
 Installation goes through NPM:
 ```
-$ npm install -g inkwell
+$ npm install -g safekeep
 ```
 ## License
 ## Usage
 
 ```
-$ inkwell <source> <destination>
+$ safekeep <source> <destination>
 ```
-Requires `.inkwellignore` in `<source>` directory or one of its parents.
+Requires `.safekeepignore` in `<source>` directory or one of its parents.
 ## Example
 
 A `<destination>` directory might look something like this:
@@ -30,6 +30,6 @@ Sep 29 15:24 current -> back-2015-09-29.15-24-05/
 Sep 25 15:55 incomplete-back-2015-09-25.15-55-48
 Sep 25 15:56 incomplete-back-2015-09-25.15-56-20
 ```
-Each time inkwell is run, a timestamped backup is made with the convention `back-YYYY-MM-DD.HH-mm-ss`, as well as a link called `current ->` which points to the latest backup.
+Each time safekeep is run, a timestamped backup is made with the convention `back-YYYY-MM-DD.HH-mm-ss`, as well as a link called `current ->` which points to the latest backup.
 
-Any changes made to `<source>` are fully backed up! Otherwise `inkwell` knows not make full copies of unchanged files.
+Any changes made to `<source>` are fully backed up! Otherwise `safekeep` knows not make full copies of unchanged files.
