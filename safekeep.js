@@ -46,7 +46,7 @@ function cliArgs (next) {
     //console.log(chalk.blue('step 1'));
 
     if (source === undefined || dest === undefined) {
-        next('Usage: inkwell source destination');
+        next('Usage: safekeep source destination');
     }
     else {
         next(null);
@@ -79,7 +79,7 @@ function formatArgs (next) {
 function finalVariables (next) {
     //console.log(chalk.blue('step 4'));
 
-    ignore = source + '/.inkwellignore';
+    ignore = source + '/.safekeepignore';
     incomplete = dest + '/incomplete-back-' + date;
     complete = dest + '/back-' + date;
     current = dest + '/current';
@@ -97,10 +97,10 @@ function ifIgnoreNotFound (next) {
     return function (err) {
         //debug(function nextStub () {});
         if (err && path.dirname(ignore) === '/') {
-            next('.inkwellignore does not exist in ' + path.resolve(source) + ' or any parent directories');
+            next('.safekeepignore does not exist in ' + path.resolve(source) + ' or any parent directories');
         }
         else if (err) {
-            ignore = path.normalize(path.dirname(ignore) + '/../.inkwellignore');
+            ignore = path.normalize(path.dirname(ignore) + '/../.safekeepignore');
             verifyInkwellIgnore(next);
         }
         else {
