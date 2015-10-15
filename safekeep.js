@@ -22,7 +22,7 @@ async.series([
     sourceIsDir,
     formatArgs,
     finalVariables,
-    verifyInkwellIgnore,
+    verifyIgnore,
     makeDestDir,
     readDir,
     //checkCurrent,
@@ -87,7 +87,7 @@ function finalVariables (next) {
     next(null);
 }
 
-function verifyInkwellIgnore (next) {
+function verifyIgnore (next) {
     //console.log(chalk.blue('step 5'));
     fs.access(ignore, fs.R_OK, ifIgnoreNotFound(next));
 }
@@ -101,7 +101,7 @@ function ifIgnoreNotFound (next) {
         }
         else if (err) {
             ignore = path.normalize(path.dirname(ignore) + '/../.safekeepignore');
-            verifyInkwellIgnore(next);
+            verifyIgnore(next);
         }
         else {
             next(null);
