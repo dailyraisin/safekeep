@@ -1,6 +1,6 @@
 {
   "name": "safekeep",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Incremental backups",
   "main": "safekeep.js",
   "scripts": {
@@ -8,7 +8,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@bitbucket.org:tysoeh/inkwell.git"
+    "url": "git@github.com:dailyraisin/safekeep.git"
+  },
+  "bin": {
+    "safekeep": "./bin/safekeep"
   },
   "contributors": [
     "Joe K <joe@dailyraisin.com>",
