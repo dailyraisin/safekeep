@@ -1,7 +1,7 @@
 {
   "name": "safekeep",
-  "version": "0.1.3",
-  "description": "Incremental backups",
+  "version": "0.1.4",
+  "description": "Incremental backup utility",
   "main": "safekeep.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
