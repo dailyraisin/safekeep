@@ -1,8 +1,8 @@
 {
-  "name": "inkwell",
+  "name": "safekeep",
   "version": "0.1.0",
   "description": "Incremental backups",
-  "main": "inkwell.js",
+  "main": "safekeep.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
