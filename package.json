@@ -1,6 +1,6 @@
 {
   "name": "safekeep",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Incremental backups",
   "main": "safekeep.js",
   "scripts": {
